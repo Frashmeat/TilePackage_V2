@@ -5,7 +5,7 @@
 #include "ItemActor.h"
 #include "ItemObject.h"
 
-#define IsStoredMutexLog
+//#define IsStoredMutexLog
 
 // Sets default values for this component's properties
 UTilePackageComponent::UTilePackageComponent()
@@ -22,6 +22,10 @@ UTilePackageComponent::UTilePackageComponent()
 
 bool UTilePackageComponent::HaveSpaceToStoreOnPoint(FItemStoredInfo ItemStoredInfo,FIntPoint LeftTopPoint)
 {
+	UpdateIsStoredMutexExcept(ItemStoredInfo);
+#ifdef IsStoredMutexLog
+	LogIsStoredMutex();
+#endif
 	bool HaveSpace = true;
 	int j, k;
 	for (j = 0; j < ItemStoredInfo.ItemSize.X; ++j)
@@ -42,7 +46,6 @@ bool UTilePackageComponent::HaveSpaceToStoreOnPoint(FItemStoredInfo ItemStoredIn
 			}
 			FIntPoint RealPoint = { RealX, RealY };
 			int RealIndex = TurnPointToIndex(RealPoint);
-			UE_LOG(LogTemp, Warning, TEXT("Real index : %d"), RealIndex);
 			if (RealIndex < 0 && RealIndex >= IsStoredMutex.Num())
 			{
 				HaveSpace = false;
@@ -58,8 +61,10 @@ bool UTilePackageComponent::HaveSpaceToStoreOnPoint(FItemStoredInfo ItemStoredIn
 	}
 	if (HaveSpace && j == ItemStoredInfo.ItemSize.X && k == ItemStoredInfo.ItemSize.Y)
 	{
+		UpdateIsStoredMutex();
 		return true;
 	}
+	UpdateIsStoredMutex();
 	return false;
 }
 
@@ -95,8 +100,29 @@ void UTilePackageComponent::LogIsStoredMutex()
 	UE_LOG(LogTemp, Warning, TEXT("%s"), *str);
 }
 
+void UTilePackageComponent::LogIsStoredMutex(TArray<bool>& Mutex) const
+{
+	FString str;
+	str.Append("\n\n");
+	for (int i = 0; i < Mutex.Num(); ++i)
+	{
+		str.AppendInt(Mutex[i]);
+		str.Append(" ");
+		if (i % PackageSize.X == PackageSize.X - 1)
+		{
+			str.Append("\n");
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *str);
+
+}
+
 void UTilePackageComponent::UpdateIsStoredMutex()
 {
+	for (int i = 0; i < PackageSize.X * PackageSize.Y; ++i)
+	{
+		IsStoredMutex[i] = false;
+	}
 	for (UItemObject* ItemObject : StoredItems)
 	{
 		FItemStoredInfo& StoredItem = ItemObject->ItemStoredInfo;
@@ -115,6 +141,35 @@ void UTilePackageComponent::UpdateIsStoredMutex()
 #ifdef IsStoredMutexLog
 	LogIsStoredMutex();
 #endif
+}
+
+void UTilePackageComponent::UpdateIsStoredMutexExcept(const FItemStoredInfo& ItemStoredInfo)
+{
+	for (int i = 0; i < PackageSize.X * PackageSize.Y; ++i)
+	{
+		IsStoredMutex[i] = false;
+	}
+
+	for (UItemObject* ItemObject : StoredItems)
+	{
+		FItemStoredInfo& StoredItem = ItemObject->ItemStoredInfo;
+		if (StoredItem.StoredLeftTopPoint == ItemStoredInfo.StoredLeftTopPoint)
+		{
+			continue;
+		}
+		FIntPoint leftTopPoint = StoredItem.StoredLeftTopPoint;
+		for (int i = 0; i < StoredItem.ItemSize.X; ++i)
+		{
+			for (int j = 0; j < StoredItem.ItemSize.Y; ++j)
+			{
+				FIntPoint RealPoint = { leftTopPoint.X + i , leftTopPoint.Y + j };
+				int RealIndex = TurnPointToIndex(RealPoint);
+				if (RealIndex >= 0 && RealIndex < IsStoredMutex.Num())
+					IsStoredMutex[RealIndex] = true;
+			}
+		}
+	}
+
 }
 
 bool UTilePackageComponent::HaveSpaceToStored(const FItemStoredInfo& ItemStoredInfo,FIntPoint& LeftTopPoint)

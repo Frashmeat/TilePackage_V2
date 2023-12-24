@@ -80,12 +80,14 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	void LogIsStoredMutex();
+	void LogIsStoredMutex(TArray<bool>& Mutex) const;
 	UPROPERTY(BlueprintReadWrite,Category = Item)
 	TArray<UItemObject*> StoredItems;
 	TArray<bool> IsStoredMutex;
 
 
 	void UpdateIsStoredMutex();
+	void UpdateIsStoredMutexExcept(const FItemStoredInfo& ItemStoredInfo);
 	bool HaveSpaceToStored(const FItemStoredInfo& ItemStoredInfo,FIntPoint& LeftTopPoint);
 	void RotateItem(FItemStoredInfo& ItemStoredInfo) const;
 	int TurnPointToIndex(FIntPoint Point) const;
