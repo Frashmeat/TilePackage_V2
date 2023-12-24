@@ -93,7 +93,6 @@ protected:
 	int TurnPointToIndex(FIntPoint Point) const;
 	FIntPoint TurnIndexToPoint(int Index) const;
 public:	
-	// Called every frame
 	FItemStoredInfo CreateItemStoredInfo(const AItemActor* ItemActor);
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	bool TryToStoreItem(const AItemActor * ItemActor);

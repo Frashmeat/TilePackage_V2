@@ -177,10 +177,8 @@ bool UTilePackageComponent::HaveSpaceToStored(const FItemStoredInfo& ItemStoredI
 	for (int i = 0; i < IsStoredMutex.Num(); ++i)
 	{
 		FIntPoint leftTop = TurnIndexToPoint(i);
-		UE_LOG(LogTemp, Warning, TEXT("Current Point X : %d ,Y : %d"), leftTop.X, leftTop.Y);
 		bool HaveSpace = true;
 		int j , k;
-		UE_LOG(LogTemp, Warning, TEXT("ItemStoredInfo ItemSize X : %d ,Y : %d"), ItemStoredInfo.ItemSize.X, ItemStoredInfo.ItemSize.Y);
 		for ( j = 0; j < ItemStoredInfo.ItemSize.X; ++j)
 		{
 			int RealX = leftTop.X + j;
@@ -199,7 +197,6 @@ bool UTilePackageComponent::HaveSpaceToStored(const FItemStoredInfo& ItemStoredI
 				}
 				FIntPoint RealPoint = { RealX, RealY };
 				int RealIndex = TurnPointToIndex(RealPoint);
-				UE_LOG(LogTemp, Warning, TEXT("Real index : %d"), RealIndex);
 				if(RealIndex < 0 && RealIndex >= IsStoredMutex.Num())
 				{
 					HaveSpace = false;
@@ -213,7 +210,6 @@ bool UTilePackageComponent::HaveSpaceToStored(const FItemStoredInfo& ItemStoredI
 			}
 			if (!HaveSpace) break;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Have Space : %d"), HaveSpace);
 		if(HaveSpace && j == ItemStoredInfo.ItemSize.X  && k == ItemStoredInfo.ItemSize.Y )
 		{
 			LeftTopPoint = leftTop;
@@ -267,17 +263,14 @@ bool UTilePackageComponent::TryToStoreItem(const AItemActor* ItemActor)
 	UpdateIsStoredMutex();
 	FItemStoredInfo ItemStoredInfo = CreateItemStoredInfo(ItemActor);
 	if (!ItemStoredInfo.ItemName.IsValid()) return false;
-	UE_LOG(LogTemp, Warning, TEXT("ItemInfo Get"));
 	if(ItemStoredInfo.MaxOverlapNum > 1)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Item is Overlaying"));
 		for (UItemObject * ItemObject : StoredItems)
 		{
 			FItemStoredInfo& StoredItem = ItemObject->ItemStoredInfo;
 			if(StoredItem.ItemName == ItemStoredInfo.ItemName && StoredItem.Quantity < StoredItem.MaxOverlapNum)
 			{
 				StoredItem.Quantity += ItemActor->Quantity;
-				UE_LOG(LogTemp, Warning, TEXT("Stored by Overlay"));
 				return true;
 			}
 		}
@@ -292,17 +285,11 @@ bool UTilePackageComponent::TryToStoreItem(const AItemActor* ItemActor)
 		}
 	}
 	ItemStoredInfo.StoredLeftTopPoint = LeftTopPoint;
-	UE_LOG(LogTemp, Warning, TEXT("StoredLeftTopPoint: X : %d , Y : %d"), LeftTopPoint.X, LeftTopPoint.Y);
 	ItemStoredInfo.Quantity = 1;
 	UItemObject* temp = NewObject<UItemObject>();
 	temp->ItemStoredInfo = ItemStoredInfo;
 	StoredItems.Emplace(temp);
 	UpdateIsStoredMutex();
-	UE_LOG(LogTemp, Warning, TEXT("Stored by Create New Info"));
-	for (UItemObject* StoredItem : StoredItems)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("StoredItem Name : %s"), *StoredItem->ItemStoredInfo.ItemName.ToString());
-	}
 	return true;
 }
 // Called every frame
